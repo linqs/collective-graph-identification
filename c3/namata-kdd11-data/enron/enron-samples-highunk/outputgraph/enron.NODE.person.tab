@@ -1,0 +1,148 @@
+NODE	person
+string:firstname	string:lastname	string:fullname	cat=other,manager,specialist,director,executive:title
+98	firstname=julie a	lastname=gomez	fullname=julie a gomez	title=executive:P=0.0,0.0,0.0,0.0,1.0
+66	firstname=ryan	lastname=slinger	fullname=ryan slinger	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+76	firstname=john	lastname=arnold	fullname=john arnold	title=executive:P=0.0,0.0,0.0,0.0,1.0
+52	firstname=wincenty j	lastname=kaminsky	fullname=wincenty j kaminsky	title=director:P=0.0,0.0,0.0,1.0,0.0
+27	firstname=albert	lastname=meyers	fullname=albert meyers	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+1	firstname=cynthia	lastname=mann	fullname=cynthia mann	title=director:P=0.0,0.0,0.0,1.0,0.0
+88	firstname=robin	lastname=rodrigue	fullname=robin rodrigue	title=other:P=1.0,0.0,0.0,0.0,0.0
+87	firstname=diana	lastname=scholtes	fullname=diana scholtes	title=manager:P=0.0,1.0,0.0,0.0,0.0
+130	firstname=tori	lastname=kuykendall	fullname=tori kuykendall	title=manager:P=0.0,1.0,0.0,0.0,0.0
+7	firstname=christopher	lastname=calger	fullname=christopher calger	title=director:P=0.0,0.0,0.0,1.0,0.0
+134	firstname=juan	lastname=hernandez	fullname=juan hernandez	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+80	firstname=leslie	lastname=hansen	fullname=leslie hansen	title=director:P=0.0,0.0,0.0,1.0,0.0
+105	firstname=rogers	lastname=herndon	fullname=rogers herndon	title=executive:P=0.0,0.0,0.0,0.0,1.0
+122	firstname=sean	lastname=crandall	fullname=sean crandall	title=director:P=0.0,0.0,0.0,1.0,0.0
+36	firstname=craig	lastname=dean	fullname=craig dean	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+26	firstname=peter	lastname=keavey	fullname=peter keavey	title=manager:P=0.0,1.0,0.0,0.0,0.0
+104	firstname=christopher	lastname=dorland	fullname=christopher dorland	title=manager:P=0.0,1.0,0.0,0.0,0.0
+43	firstname=andrew	lastname=lewis	fullname=andrew lewis	title=director:P=0.0,0.0,0.0,1.0,0.0
+14	firstname=judith	lastname=townsend	fullname=judith townsend	title=manager:P=0.0,1.0,0.0,0.0,0.0
+0	firstname=janet h	lastname=moor	fullname=janet h moor	title=director:P=0.0,0.0,0.0,1.0,0.0
+95	firstname=geoffrey	lastname=storey	fullname=geoffrey storey	title=director:P=0.0,0.0,0.0,1.0,0.0
+64	firstname=stephanie	lastname=miller	fullname=stephanie miller	title=director:P=0.0,0.0,0.0,1.0,0.0
+129	firstname=mark	lastname=greenberg	fullname=mark greenberg	title=director:P=0.0,0.0,0.0,1.0,0.0
+100	firstname=mark	lastname=haedicke	fullname=mark haedicke	title=director:P=0.0,0.0,0.0,1.0,0.0
+19	firstname=harlan	lastname=murphy	fullname=harlan murphy	title=director:P=0.0,0.0,0.0,1.0,0.0
+112	firstname=janet	lastname=moore	fullname=janet moore	title=director:P=0.0,0.0,0.0,1.0,0.0
+128	firstname=keith	lastname=holst	fullname=keith holst	title=director:P=0.0,0.0,0.0,1.0,0.0
+21	firstname=john	lastname=hodge	fullname=john hodge	title=director:P=0.0,0.0,0.0,1.0,0.0
+74	firstname=steven p	lastname=south	fullname=steven p south	title=director:P=0.0,0.0,0.0,1.0,0.0
+91	firstname=christian	lastname=yoder	fullname=christian yoder	title=director:P=0.0,0.0,0.0,1.0,0.0
+42	firstname=joseph	lastname=errigo	fullname=joseph errigo	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+57	firstname=michael	lastname=swerzbin	fullname=michael swerzbin	title=executive:P=0.0,0.0,0.0,0.0,1.0
+86	firstname=marie	lastname=heard	fullname=marie heard	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+117	firstname=julie	lastname=gomez	fullname=julie gomez	title=executive:P=0.0,0.0,0.0,0.0,1.0
+106	firstname=mark	lastname=davis	fullname=mark davis	title=executive:P=0.0,0.0,0.0,0.0,1.0
+11	firstname=timothy	lastname=belden	fullname=timothy belden	title=director:P=0.0,0.0,0.0,1.0,0.0
+120	firstname=david v	lastname=porter	fullname=david v porter	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+29	firstname=joseph	lastname=stepenovitch	fullname=joseph stepenovitch	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+65	firstname=william	lastname=williams	fullname=william williams	title=director:P=0.0,0.0,0.0,1.0,0.0
+124	firstname=fletcher	lastname=sturm	fullname=fletcher sturm	title=executive:P=0.0,0.0,0.0,0.0,1.0
+8	firstname=paul	lastname=thomas	fullname=paul thomas	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+78	firstname=sara	lastname=shackleton	fullname=sara shackleton	title=director:P=0.0,0.0,0.0,1.0,0.0
+58	firstname=susan m	lastname=scott	fullname=susan m scott	title=other:P=1.0,0.0,0.0,0.0,0.0
+71	firstname=lawrence	lastname=may	fullname=lawrence may	title=director:P=0.0,0.0,0.0,1.0,0.0
+97	firstname=david	lastname=portz	fullname=david portz	title=director:P=0.0,0.0,0.0,1.0,0.0
+94	firstname=andrea	lastname=ring	fullname=andrea ring	title=director:P=0.0,0.0,0.0,1.0,0.0
+39	firstname=larry	lastname=campbell	fullname=larry campbell	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+85	firstname=michael	lastname=maggi	fullname=michael maggi	title=director:P=0.0,0.0,0.0,1.0,0.0
+118	firstname=carol	lastname=st clair	fullname=carol st clair	title=director:P=0.0,0.0,0.0,1.0,0.0
+107	firstname=victoria	lastname=versen	fullname=victoria versen	title=other:P=1.0,0.0,0.0,0.0,0.0
+79	firstname=matthew	lastname=lenhart	fullname=matthew lenhart	title=other:P=1.0,0.0,0.0,0.0,0.0
+30	firstname=thomas	lastname=donohoe	fullname=thomas donohoe	title=manager:P=0.0,1.0,0.0,0.0,0.0
+5	firstname=michelle	lastname=blaine	fullname=michelle blaine	title=director:P=0.0,0.0,0.0,1.0,0.0
+48	firstname=steve	lastname=wang	fullname=steve wang	title=manager:P=0.0,1.0,0.0,0.0,0.0
+125	firstname=debra	lastname=perlingiere	fullname=debra perlingiere	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+144	firstname=mark	lastname=guzman	fullname=mark guzman	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+55	firstname=david	lastname=fuller	fullname=david fuller	title=manager:P=0.0,1.0,0.0,0.0,0.0
+62	firstname=francisco	lastname=pinto-leite	fullname=francisco pinto-leite	title=director:P=0.0,0.0,0.0,1.0,0.0
+13	firstname=eric	lastname=linder	fullname=eric linder	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+72	firstname=phillip	lastname=allen	fullname=phillip allen	title=director:P=0.0,0.0,0.0,1.0,0.0
+108	firstname=richard	lastname=sanders	fullname=richard sanders	title=executive:P=0.0,0.0,0.0,0.0,1.0
+139	firstname=hunter	lastname=shively	fullname=hunter shively	title=executive:P=0.0,0.0,0.0,0.0,1.0
+84	firstname=john	lastname=lavorato	fullname=john lavorato	title=executive:P=0.0,0.0,0.0,0.0,1.0
+101	firstname=andrew	lastname=greer	fullname=andrew greer	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+121	firstname=robert	lastname=benson	fullname=robert benson	title=director:P=0.0,0.0,0.0,1.0,0.0
+49	firstname=barry	lastname=tycholiz	fullname=barry tycholiz	title=executive:P=0.0,0.0,0.0,0.0,1.0
+143	firstname=philip	lastname=polsky	fullname=philip polsky	title=other:P=1.0,0.0,0.0,0.0,0.0
+37	firstname=susan	lastname=pereira	fullname=susan pereira	title=manager:P=0.0,1.0,0.0,0.0,0.0
+77	firstname=iris	lastname=mack	fullname=iris mack	title=manager:P=0.0,1.0,0.0,0.0,0.0
+115	firstname=w david	lastname=duran	fullname=w david duran	title=director:P=0.0,0.0,0.0,1.0,0.0
+6	firstname=robert	lastname=badeer	fullname=robert badeer	title=manager:P=0.0,1.0,0.0,0.0,0.0
+63	firstname=harpreet	lastname=arora	fullname=harpreet arora	title=executive:P=0.0,0.0,0.0,0.0,1.0
+56	firstname=eric	lastname=saibi	fullname=eric saibi	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+38	firstname=gerald	lastname=nemec	fullname=gerald nemec	title=manager:P=0.0,1.0,0.0,0.0,0.0
+142	firstname=don	lastname=baughman	fullname=don baughman	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+111	firstname=john	lastname=griffith	fullname=john griffith	title=manager:P=0.0,1.0,0.0,0.0,0.0
+3	firstname=paul	lastname=lucci	fullname=paul lucci	title=director:P=0.0,0.0,0.0,1.0,0.0
+92	firstname=susan	lastname=bailey	fullname=susan bailey	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+20	firstname=jonathan	lastname=mckay	fullname=jonathan mckay	title=director:P=0.0,0.0,0.0,1.0,0.0
+145	firstname=jay	lastname=blaine	fullname=jay blaine	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+16	firstname=mark e	lastname=taylor	fullname=mark e taylor	title=executive:P=0.0,0.0,0.0,0.0,1.0
+23	firstname=randall	lastname=gay	fullname=randall gay	title=other:P=1.0,0.0,0.0,0.0,0.0
+138	firstname=barbara n	lastname=gray	fullname=barbara n gray	title=executive:P=0.0,0.0,0.0,0.0,1.0
+60	firstname=stephanie	lastname=panus	fullname=stephanie panus	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+83	firstname=russell	lastname=ballato	fullname=russell ballato	title=other:P=1.0,0.0,0.0,0.0,0.0
+75	firstname=anne	lastname=koehler	fullname=anne koehler	title=director:P=0.0,0.0,0.0,1.0,0.0
+123	firstname=anne c	lastname=koehler	fullname=anne c koehler	title=director:P=0.0,0.0,0.0,1.0,0.0
+4	firstname=christopher f	lastname=calger	fullname=christopher f calger	title=director:P=0.0,0.0,0.0,1.0,0.0
+99	firstname=chris	lastname=germany	fullname=chris germany	title=manager:P=0.0,1.0,0.0,0.0,0.0
+46	firstname=tana	lastname=jones	fullname=tana jones	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+70	firstname=john	lastname=forney	fullname=john forney	title=director:P=0.0,0.0,0.0,1.0,0.0
+10	firstname=jeff	lastname=king	fullname=jeff king	title=manager:P=0.0,1.0,0.0,0.0,0.0
+69	firstname=matthew	lastname=motley	fullname=matthew motley	title=director:P=0.0,0.0,0.0,1.0,0.0
+53	firstname=geir	lastname=solberg	fullname=geir solberg	title=other:P=1.0,0.0,0.0,0.0,0.0
+22	firstname=frank w	lastname=vickers	fullname=frank w vickers	title=executive:P=0.0,0.0,0.0,0.0,1.0
+141	firstname=colleen	lastname=sullivan-shaklovitz	fullname=colleen sullivan-shaklovitz	title=director:P=0.0,0.0,0.0,1.0,0.0
+32	firstname=kevin	lastname=ruscitti	fullname=kevin ruscitti	title=manager:P=0.0,1.0,0.0,0.0,0.0
+9	firstname=juan	lastname=padron	fullname=juan padron	title=other:P=1.0,0.0,0.0,0.0,0.0
+137	firstname=james	lastname=reitmeyer	fullname=james reitmeyer	title=other:P=1.0,0.0,0.0,0.0,0.0
+28	firstname=martin	lastname=cuilla	fullname=martin cuilla	title=manager:P=0.0,1.0,0.0,0.0,0.0
+133	firstname=corry	lastname=bentley	fullname=corry bentley	title=manager:P=0.0,1.0,0.0,0.0,0.0
+109	firstname=sandra	lastname=brawner	fullname=sandra brawner	title=director:P=0.0,0.0,0.0,1.0,0.0
+116	firstname=sylvia s	lastname=polan	fullname=sylvia s polan	title=director:P=0.0,0.0,0.0,1.0,0.0
+47	firstname=douglas	lastname=gilbert-smith	fullname=douglas gilbert-smith	title=director:P=0.0,0.0,0.0,1.0,0.0
+15	firstname=joseph	lastname=quenet	fullname=joseph quenet	title=manager:P=0.0,1.0,0.0,0.0,0.0
+82	firstname=tyrell	lastname=harrison	fullname=tyrell harrison	title=other:P=1.0,0.0,0.0,0.0,0.0
+35	firstname=sheila	lastname=tweed	fullname=sheila tweed	title=executive:P=0.0,0.0,0.0,0.0,1.0
+103	firstname=frank	lastname=vickers	fullname=frank vickers	title=executive:P=0.0,0.0,0.0,0.0,1.0
+140	firstname=michael	lastname=grigsby	fullname=michael grigsby	title=executive:P=0.0,0.0,0.0,0.0,1.0
+96	firstname=maria	lastname=valdes	fullname=maria valdes	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+54	firstname=daren j	lastname=farmer	fullname=daren j farmer	title=manager:P=0.0,1.0,0.0,0.0,0.0
+68	firstname=scott	lastname=neal	fullname=scott neal	title=executive:P=0.0,0.0,0.0,0.0,1.0
+132	firstname=jaime	lastname=gualy	fullname=jaime gualy	title=other:P=1.0,0.0,0.0,0.0,0.0
+34	firstname=andrew	lastname=zipper	fullname=andrew zipper	title=executive:P=0.0,0.0,0.0,0.0,1.0
+61	firstname=leaf	lastname=harasin	fullname=leaf harasin	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+89	firstname=elizabeth	lastname=sager	fullname=elizabeth sager	title=executive:P=0.0,0.0,0.0,0.0,1.0
+73	firstname=jane m	lastname=tholt	fullname=jane m tholt	title=director:P=0.0,0.0,0.0,1.0,0.0
+44	firstname=scott	lastname=goodell	fullname=scott goodell	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+136	firstname=thomas	lastname=martin	fullname=thomas martin	title=executive:P=0.0,0.0,0.0,0.0,1.0
+127	firstname=john	lastname=kinser	fullname=john kinser	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+50	firstname=stacy e	lastname=dickson-granmayeh	fullname=stacy e dickson-granmayeh	title=director:P=0.0,0.0,0.0,1.0,0.0
+18	firstname=gwyn	lastname=koepke	fullname=gwyn koepke	title=manager:P=0.0,1.0,0.0,0.0,0.0
+31	firstname=john	lastname=anderson	fullname=john anderson	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+25	firstname=robert	lastname=stalford	fullname=robert stalford	title=manager:P=0.0,1.0,0.0,0.0,0.0
+24	firstname=mark	lastname=whitt	fullname=mark whitt	title=executive:P=0.0,0.0,0.0,0.0,1.0
+51	firstname=jean	lastname=mrha	fullname=jean mrha	title=executive:P=0.0,0.0,0.0,0.0,1.0
+17	firstname=louise	lastname=kitchen	fullname=louise kitchen	title=executive:P=0.0,0.0,0.0,0.0,1.0
+90	firstname=frank	lastname=ermis	fullname=frank ermis	title=manager:P=0.0,1.0,0.0,0.0,0.0
+33	firstname=vladi	lastname=pimenov	fullname=vladi pimenov	title=other:P=1.0,0.0,0.0,0.0,0.0
+12	firstname=christopher	lastname=gaskill	fullname=christopher gaskill	title=manager:P=0.0,1.0,0.0,0.0,0.0
+93	firstname=scott	lastname=hendrickson	fullname=scott hendrickson	title=director:P=0.0,0.0,0.0,1.0,0.0
+41	firstname=clint	lastname=dean	fullname=clint dean	title=manager:P=0.0,1.0,0.0,0.0,0.0
+113	firstname=matthew	lastname=lorenz	fullname=matthew lorenz	title=manager:P=0.0,1.0,0.0,0.0,0.0
+2	firstname=benjamin	lastname=rogers	fullname=benjamin rogers	title=other:P=1.0,0.0,0.0,0.0,0.0
+119	firstname=bradley	lastname=mckay	fullname=bradley mckay	title=director:P=0.0,0.0,0.0,1.0,0.0
+81	firstname=mary	lastname=cook	fullname=mary cook	title=director:P=0.0,0.0,0.0,1.0,0.0
+126	firstname=mathew	lastname=smith	fullname=mathew smith	title=other:P=1.0,0.0,0.0,0.0,0.0
+114	firstname=laura	lastname=luce	fullname=laura luce	title=executive:P=0.0,0.0,0.0,0.0,1.0
+45	firstname=cheryl	lastname=nelson	fullname=cheryl nelson	title=director:P=0.0,0.0,0.0,1.0,0.0
+67	firstname=monique	lastname=sanchez	fullname=monique sanchez	title=other:P=1.0,0.0,0.0,0.0,0.0
+110	firstname=charles	lastname=ames	fullname=charles ames	title=other:P=1.0,0.0,0.0,0.0,0.0
+135	firstname=jeffrey t	lastname=hodge	fullname=jeffrey t hodge	title=executive:P=0.0,0.0,0.0,0.0,1.0
+40	firstname=david	lastname=porter	fullname=david porter	title=specialist:P=0.0,0.0,1.0,0.0,0.0
+59	firstname=lloyd	lastname=will	fullname=lloyd will	title=director:P=0.0,0.0,0.0,1.0,0.0
+131	firstname=brent	lastname=hendry	fullname=brent hendry	title=director:P=0.0,0.0,0.0,1.0,0.0
+102	firstname=kevin	lastname=presto	fullname=kevin presto	title=executive:P=0.0,0.0,0.0,0.0,1.0

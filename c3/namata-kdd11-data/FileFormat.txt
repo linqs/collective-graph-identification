@@ -1,0 +1,41 @@
+File Format:
+The data is available in a sparse, tab delimited format.  There is a separate file for each type of node and edge, as well as one for the graph itself.
+
+The basic format for node and graph files is as follows:
+
+[GRAPH|NODE]\t<schemaid>
+[NO_FEATURES|<featuretype>:<featurename>[:<defaultvalue>][\t<featuretype>:<featurename>[:<defaultvalue>]]*]
+<id>\t<values>*
+
+The first line indicates the type of object defined in this file (i.e., graph, node) as well as a string which identifies this set of objects (e.g., people nodes, friendship edges).  The second line either contains NO_FEATURES, which indicates that this set of objects do not have any attributes defined for it, or it contains a tab delimited set of attribute declarations which specifies the type of the attribute (string,numeric,cat=[<category>][,<category>]*), the name of the attribute (i.e., age, height, hair color), and, optionally, a default value.
+
+The subsequent lines each correspond to one object (for graph files, you have exactly one line which defines the id and attribute values of the graph itself).  A unique ID is specified for each object in the first column and the subsequent columns contain a key/value pair (of the form key=value) where key is the name of an attribute (defined in the second line) and the value is a string representation of the attribute value of that attribute for the object described by that line.
+
+Example:
+NODE person
+string:name	numeric:age	cat=undergrad,grad:type:undergrad
+s1	name=Bob	age=22	type=grad
+s2	name=Ann	age=34
+
+[DIRECTED|UNDIRECTED]\t<schemaid>
+[NO_FEATURES|<featuretype>:<featurename>[:<defaultvalue>][\t<featuretype>:<featurename>[:<defaultvalue>]]*]
+<id>\t<values>*
+
+For edges, after the ID for each edge (directed or undirected), we have a similar format but where the format for each line referring to each edge also contains information about the nodes that the edge is incident upon.  For undirected edges, each line has the form:
+<id>\t<nodetype><nodeid>[\t<nodeid>]*\t|\t<values>*
+
+where node type refers to the type id (defined in the first line of each node file) and nodeid refers to the object id (defined by the first column of a node file) that the undirected edge is incident to.
+
+For directed edges, each line has the form:
+<id>\t<sourcenodetype>:<sourcenodeid>[\t<sourcenodetype>:<sourcenodeid>]*\t|\t<targetnodetype>:<targetnodeid>[\t<targetnodetype>:<targetnodeid>]*\t|\t<values>*
+
+where sourcenodetype and sourcenodeid is the node type and id of a source of this directed edge and targetnodetype and targetnodeid is a target of this directed edge.  Note that this format support hyperedges (undirected edges can have 1 or more nodes and directed edges can have one or more source and one or more target nodes).
+
+Example:
+DIRECTED	Friends
+NO_FEATURES
+Friendship1	Person:s1	Person:s2
+
+UNDIRECTED	MemberOf
+NO_FEATURES
+M1	Person:s1	|	Group:g1

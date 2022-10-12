@@ -1,0 +1,21 @@
+The directory contains 3 directories, corresponding to the three datasets cora, citeseer, and enron.  Cora and citeseer contains 3 subdirectories, corresponding to the 3 levels of noise added to the dataset, and each subdirectory contains 30 directories containing graphs which correspond to 3 sets (each for a varying levels of labeled information) of 5 sample (the observed, noisy graph) and 5 output (the ground truth) graphs.  Each graph directory contains the files:
+
+<dataset>.DIRECTED.cites.tab-The citation edges between papers.
+<dataset>.DIRECTED.extracted.tab-The observed extracted edges between paper references.
+<dataset>.DIRECTED.paperref-cites.tab-The potential citation edges between paper references including the existence variable predicted for link resolution.
+<dataset>.DIRECTED.refersto.tab-Edge from each paper reference to the paper it refers to.  Used only for evaluation.
+<dataset>.GRAPH.Citation.tab-The file describing the graph.
+<dataset>.NODE.paper.tab-The paper nodes including the label/topic of that paper.
+<dataset>.NODE.paperref.tab-The paper reference nodes including the label/topic of that paper reference (predicted for node labeling), binary indicator for words in that paper, and a summary feature with the ids of references adjacent via extracted edges.
+<dataset>.UNDIRECTED.coref.tab-Undirected edges between potentially co-referent nodes including the existence variable predicted for entity resolution.
+
+Enron contains 3 subdirectories corresponding to varyiing levels of labeled information.  Each subdirectory contains 6 sample (the observed communication graph) and 1 output (the ground truth) graph.  Each graph directory contains the files:
+
+<dataset>-enron.DIRECTED.emailof.tab-Edges from email adresses to the person who owns that address.
+<dataset>-enron.DIRECTED.sentto.tab-Edges from each email address to the other email addresses it has shared a message with.
+<dataset>-enron.GRAPH.communication.tab-The file describing the graph.
+<dataset>-enron.NODE.email.tab-The email address nodes including the words sent (cumulatively) from that email address and the title of the user of that email address (predicted for node labeling).
+<dataset>-enron.NODE.person.tab-The people nodes including the title of that person.
+<dataset>-enron.UNDIRECTED.coref.tab-Undirected edges between email addresses which potentially belong to the same person including the existence variable predicted for entity resolution.
+<dataset>-enron.UNDIRECTED.email-submgr.tab-Undirected edge between email address nodes indicating a potential subordinate-manager relationship between the owners of the email addresses.  This includes the existence variable predicted for link prediction.
+<dataset>-enron.UNDIRECTED.submgr.tab-Undirected edge between people nodes where one is the manager of the other.

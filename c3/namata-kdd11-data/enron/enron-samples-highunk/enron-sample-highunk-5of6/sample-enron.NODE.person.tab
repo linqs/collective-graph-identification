@@ -1,0 +1,2 @@
+NODE	person
+string:firstname	string:lastname	string:fullname	cat=other,manager,specialist,director,executive:title
