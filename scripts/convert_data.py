@@ -28,6 +28,19 @@ def resolve_column_type(table):
 def get_feature_tuple(feature):
     feature_data = re.split(r"[:=]", feature)
     return feature_data
+
+def replace_rightmost(pattern, replacement, text):
+    # Find all occurrences of the pattern in the text
+    matches = re.findall(pattern, text)
+
+    if len(matches) > 0:
+        # Find the index of the rightmost occurrence
+        rightmost_index = text.rindex(matches[-1])
+
+        # Replace the rightmost occurrence
+        text = text[:rightmost_index] + re.sub(pattern, replacement, text[rightmost_index:], count=1)
+
+    return text
     
 # Loads the *.tab files into a Pandas Dataframe.
 # Returns: pd.DataFrame(columns=features)
@@ -48,7 +61,9 @@ def load_table(filename):
                 # Prepare dataframe column labels.
                 tokens = row.split()
                 if len(tokens) == 1:
-                    print("This is not a NODE file, so don't load this row")
+                    # print("This is not a NODE file, so don't load this row")
+                    i += 1
+                    continue
                 else:  
                     features = ["id"] + [get_feature_tuple(feature)[1] for feature in tokens]
                     node_data = pd.DataFrame(columns=features)
@@ -57,6 +72,9 @@ def load_table(filename):
                 # This is to help the function generalize among the NODE and EDGE files.
                 # EDGE files have a "|" character, which needs to be removed for proper feature decoupling.
                 row = re.sub(r'\|','', row)
+
+				# For the UNDIRECTED edge files, we need to rename one of the columns due to key collision
+                row = replace_rightmost("email:", "alt_email:", row)
             
                 tokens = row.split()
 
@@ -92,9 +110,10 @@ def output_to_dir(df, outdir, outname):
     
     fullname = os.path.join(outdir, outname)
     
-    print("outputing to: ", fullname) 
+    print("outputing split to: ", fullname) 
     df.to_csv(fullname, sep = '\t', index = False, header = False)
 
+# Outputs the whole ground truth and splits from the C3 data.
 def process_email_nodes():
     # Get ground truth.
     email_nodes = load_table(FILE_GROUND_TRUTH_EMAIL_NODES)
@@ -112,6 +131,7 @@ def process_email_nodes():
     email_nodes_data['exists'] = 1.0
 
     full_set_email_has_label_data = fill_observed_missing_possibilities(email_nodes_data, ['id', 'title', 'exists'], list(title_map.values()))
+    print("outputting full set for node labeling: ./EmailHasLabel_data.txt")
     full_set_email_has_label_data.to_csv('EmailHasLabel_data.txt', sep ='\t', index=False, header=False, columns=['id', 'title', 'exists'])
 
     # Get targets, calculate splits for PSL predicates.
@@ -119,8 +139,6 @@ def process_email_nodes():
         # Targets
         SPLIT_NUM = i
         FILE_SAMPLE_EMAIL_NODES   = f'../c3/namata-kdd11-data/enron/enron-samples-lowunk/enron-sample-lowunk-{SPLIT_NUM}of6/sample-enron.NODE.email.tab'
-        FILE_SAMPLE_COREF_EDGES   = f'../c3/namata-kdd11-data/enron/enron-samples-lowunk/enron-sample-lowunk-{SPLIT_NUM}of6/sample-enron.UNDIRECTED.coref.tab'
-        FILE_SAMPLE_MANAGES_EDGES = f'../c3/namata-kdd11-data/enron/enron-samples-lowunk/enron-sample-lowunk-{SPLIT_NUM}of6/sample-enron.UNDIRECTED.email-submgr.tab'
         # Grab the sample from the original experiment, this will allow us to calculate observations and targets.
         sample_email_nodes = load_table(FILE_SAMPLE_EMAIL_NODES)
 
@@ -152,10 +170,98 @@ def process_email_nodes():
         # PSL splits start at 00, not 1.
         outdir = './enron/' + str(i-1).zfill(2) + '/eval'
         output_to_dir(full_set_email_has_label_obs, outdir, 'EmailHasLabel_obs.txt')
-        output_to_dir(full_set_email_has_label_truth, outdir, 'EmailHasLabel_targets.txt')
+        output_to_dir(full_set_email_has_label_truth, outdir, 'EmailHasLabel_truth.txt')
+
+# Outputs the whole ground truth and splits from the C3 data.
+def process_CoRef_edges():
+    # Need to process email nodes so we can later calculate the 'blocked' edges from the c3 datasets.
+    email_nodes = load_table(FILE_GROUND_TRUTH_EMAIL_NODES)
+    # Remove the (unnecessary) second to last column (it came from an ambiguous parse splits).
+    email_nodes.drop('other,manager,specialist,director,executive', axis=1, inplace=True)
+    resolve_column_type(email_nodes)
+
+    # Start loading in the CoRef edges.
+    coref_edges = load_table(FILE_GROUND_TRUTH_COREF_EDGES)
+    resolve_column_type(coref_edges)
+
+	# Grab necessary columns, in preparation for dumping the whole ground truth data
+    coref_edges_data = coref_edges[['email','alt_email', 'exists']].copy()
+    
+    # convert existence column to boolean, so PSL can ground faster
+    exists_map = {"NOTEXIST": 0.0, "EXIST": 1.0}
+    coref_edges_data = coref_edges_data.replace({'exists': exists_map})
+    
+    # Since it's undirected, add in the reverse edges.
+    coref_edges_data_sym = coref_edges_data[['alt_email', 'email', 'exists']].copy()
+    coref_edges_data_sym.rename(columns = {'alt_email':'email', 'email':'alt_email'}, inplace = True)
+    
+    coref_edges_data = pd.concat([coref_edges_data, coref_edges_data_sym])
+    
+    # Calculated the missing edges that were blocked.
+    missing_edges = {pair for pair in itertools.permutations(email_nodes['id'], 2)} - {pair for pair in zip(coref_edges_data['email'], coref_edges_data['alt_email'])}
+    
+    # add in the missing edges
+    row_list = []
+    for email, alt_email in missing_edges:
+        row_dict = {'email':email, 'alt_email':alt_email, 'exists':0 }
+        row_list.append(row_dict)
+
+    full_set_coref_edges_data = pd.concat([coref_edges_data, pd.DataFrame(row_list)], ignore_index=True)
+
+    print("outputting full set for entity resolution: ./CoRef_data.txt")
+    full_set_coref_edges_data.to_csv('CoRef_data.txt', sep ='\t', index=False, header=False, columns=['email', 'alt_email', 'exists'])
+
+    # Get targets, calculate splits for PSL predicates.
+    for i in range(1, 7):
+        # Targets
+        SPLIT_NUM = i
+        FILE_SAMPLE_COREF_EDGES   = f'../c3/namata-kdd11-data/enron/enron-samples-lowunk/enron-sample-lowunk-{SPLIT_NUM}of6/sample-enron.UNDIRECTED.coref.tab'
+        # Grab the sample from the original experiment, this will allow us to calculate observations and targets.
+        sample_coref_edges = load_table(FILE_SAMPLE_COREF_EDGES)
+        resolve_column_type(sample_coref_edges)
+
+        # Split data into observed and targets (AKA train and test)
+        coref_edges_obs = coref_edges[coref_edges['id'].isin(sample_coref_edges[sample_coref_edges['exists'].notna()]['id'])]
+        coref_edges_truth = coref_edges[coref_edges['id'].isin(sample_coref_edges[sample_coref_edges['exists'].isna()]['id'])]
+
+        # Grab the necessary columns
+        coref_obs = coref_edges_obs[['email', 'alt_email', 'exists']].copy()
+        coref_truth = coref_edges_truth[['email', 'alt_email', 'exists']].copy()
+        
+        # convert existence column to boolean, so PSL can ground faster
+        coref_obs = coref_obs.replace({'exists': exists_map})
+        coref_truth = coref_truth.replace({'exists': exists_map})
+        
+        # Since it's undirected, add in the reverse edges.
+        coref_obs_sym = coref_obs[['alt_email', 'email', 'exists']].copy()
+        coref_truth_sym = coref_truth[['alt_email', 'email', 'exists']].copy()
+        
+        coref_obs_sym.rename(columns = {'alt_email':'email', 'email':'alt_email'}, inplace = True)
+        coref_truth_sym.rename(columns = {'alt_email':'email', 'email':'alt_email'}, inplace = True)
+        
+        coref_obs = pd.concat([coref_obs, coref_obs_sym], ignore_index=True)
+        coref_truth = pd.concat([coref_truth, coref_truth_sym], ignore_index=True)
+        
+        # Calculated the missing edges that were blocked. Note the last set prevents cross contamination
+        missing_edges = {pair for pair in itertools.permutations(email_nodes['id'], 2)} - {pair for pair in zip(coref_obs['email'], coref_obs['alt_email'])} - {pair for pair in zip(coref_truth['email'], coref_truth['alt_email'])}
+        
+        # add in the missing edges
+        row_list = []
+        for email, alt_email in missing_edges:
+            row_dict = {'email':email, 'alt_email':alt_email, 'exists':0 }
+            row_list.append(row_dict)
+        
+        full_set_coref_edges_obs = pd.concat([coref_obs, pd.DataFrame(row_list)], ignore_index=True)
+
+        # Outputs splits to file.
+        # PSL splits start at 00, not 1.
+        outdir = './enron/' + str(i-1).zfill(2) + '/eval'
+        output_to_dir(full_set_coref_edges_obs, outdir, 'CoRef_obs.txt')
+        output_to_dir(coref_truth, outdir, 'CoRef_truth.txt')
 
 def main():
     process_email_nodes()
+    process_CoRef_edges()
 
 if __name__=="__main__":
     main()
