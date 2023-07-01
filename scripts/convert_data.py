@@ -17,7 +17,7 @@ FILE_GROUND_TRUTH_COMMUNICATION_EDGES = '../c3/namata-kdd11-data/enron/enron-sam
 # Assigns types to each column.
 def resolve_column_type(table):
     for column in table.columns:
-        if column in {'id', 'email', 'alt_email', 'other_email' , 'numsent', 'numreceived', 'numexchanged'}:
+        if column in {'id', 'email', 'other_email', 'other_email' , 'numsent', 'numreceived', 'numexchanged'}:
             table[column] = table[column].astype(str).astype(float).astype(int)
         # convert bag-of-words columns to floats (since ints won't take NaNs)
         elif re.match("w-", column):
@@ -74,7 +74,7 @@ def load_table(filename):
                 row = re.sub(r'\|','', row)
 
 				# For the UNDIRECTED edge files, we need to rename one of the columns due to key collision
-                row = replace_rightmost("email:", "alt_email:", row)
+                row = replace_rightmost("email:", "other_email:", row)
             
                 tokens = row.split()
 
@@ -185,31 +185,31 @@ def process_CoRef_edges():
     resolve_column_type(coref_edges)
 
 	# Grab necessary columns, in preparation for dumping the whole ground truth data
-    coref_edges_data = coref_edges[['email','alt_email', 'exists']].copy()
+    coref_edges_data = coref_edges[['email','other_email', 'exists']].copy()
     
     # convert existence column to boolean, so PSL can ground faster
     exists_map = {"NOTEXIST": 0.0, "EXIST": 1.0}
     coref_edges_data = coref_edges_data.replace({'exists': exists_map})
     
     # Since it's undirected, add in the reverse edges.
-    coref_edges_data_sym = coref_edges_data[['alt_email', 'email', 'exists']].copy()
-    coref_edges_data_sym.rename(columns = {'alt_email':'email', 'email':'alt_email'}, inplace = True)
+    coref_edges_data_sym = coref_edges_data[['other_email', 'email', 'exists']].copy()
+    coref_edges_data_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
     
     coref_edges_data = pd.concat([coref_edges_data, coref_edges_data_sym])
     
     # Calculated the missing edges that were blocked.
-    missing_edges = {pair for pair in itertools.permutations(email_nodes['id'], 2)} - {pair for pair in zip(coref_edges_data['email'], coref_edges_data['alt_email'])}
+    missing_edges = {pair for pair in itertools.permutations(email_nodes['id'], 2)} - {pair for pair in zip(coref_edges_data['email'], coref_edges_data['other_email'])}
     
     # add in the missing edges
     row_list = []
-    for email, alt_email in missing_edges:
-        row_dict = {'email':email, 'alt_email':alt_email, 'exists':0 }
+    for email, other_email in missing_edges:
+        row_dict = {'email':email, 'other_email':other_email, 'exists':0 }
         row_list.append(row_dict)
 
     full_set_coref_edges_data = pd.concat([coref_edges_data, pd.DataFrame(row_list)], ignore_index=True)
 
     print("outputting full set for entity resolution: ./CoRef_data.txt")
-    full_set_coref_edges_data.to_csv('CoRef_data.txt', sep ='\t', index=False, header=False, columns=['email', 'alt_email', 'exists'])
+    full_set_coref_edges_data.to_csv('CoRef_data.txt', sep ='\t', index=False, header=False, columns=['email', 'other_email', 'exists'])
 
     # Get targets, calculate splits for PSL predicates.
     for i in range(1, 7):
@@ -225,30 +225,30 @@ def process_CoRef_edges():
         coref_edges_truth = coref_edges[coref_edges['id'].isin(sample_coref_edges[sample_coref_edges['exists'].isna()]['id'])]
 
         # Grab the necessary columns
-        coref_obs = coref_edges_obs[['email', 'alt_email', 'exists']].copy()
-        coref_truth = coref_edges_truth[['email', 'alt_email', 'exists']].copy()
+        coref_obs = coref_edges_obs[['email', 'other_email', 'exists']].copy()
+        coref_truth = coref_edges_truth[['email', 'other_email', 'exists']].copy()
         
         # convert existence column to boolean, so PSL can ground faster
         coref_obs = coref_obs.replace({'exists': exists_map})
         coref_truth = coref_truth.replace({'exists': exists_map})
         
         # Since it's undirected, add in the reverse edges.
-        coref_obs_sym = coref_obs[['alt_email', 'email', 'exists']].copy()
-        coref_truth_sym = coref_truth[['alt_email', 'email', 'exists']].copy()
+        coref_obs_sym = coref_obs[['other_email', 'email', 'exists']].copy()
+        coref_truth_sym = coref_truth[['other_email', 'email', 'exists']].copy()
         
-        coref_obs_sym.rename(columns = {'alt_email':'email', 'email':'alt_email'}, inplace = True)
-        coref_truth_sym.rename(columns = {'alt_email':'email', 'email':'alt_email'}, inplace = True)
+        coref_obs_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
+        coref_truth_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
         
         coref_obs = pd.concat([coref_obs, coref_obs_sym], ignore_index=True)
         coref_truth = pd.concat([coref_truth, coref_truth_sym], ignore_index=True)
         
         # Calculated the missing edges that were blocked. Note the last set prevents cross contamination
-        missing_edges = {pair for pair in itertools.permutations(email_nodes['id'], 2)} - {pair for pair in zip(coref_obs['email'], coref_obs['alt_email'])} - {pair for pair in zip(coref_truth['email'], coref_truth['alt_email'])}
+        missing_edges = {pair for pair in itertools.permutations(email_nodes['id'], 2)} - {pair for pair in zip(coref_obs['email'], coref_obs['other_email'])} - {pair for pair in zip(coref_truth['email'], coref_truth['other_email'])}
         
         # add in the missing edges
         row_list = []
-        for email, alt_email in missing_edges:
-            row_dict = {'email':email, 'alt_email':alt_email, 'exists':0 }
+        for email, other_email in missing_edges:
+            row_dict = {'email':email, 'other_email':other_email, 'exists':0 }
             row_list.append(row_dict)
         
         full_set_coref_edges_obs = pd.concat([coref_obs, pd.DataFrame(row_list)], ignore_index=True)
