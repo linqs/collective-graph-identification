@@ -259,9 +259,98 @@ def process_CoRef_edges():
         output_to_dir(full_set_coref_edges_obs, outdir, 'CoRef_obs.txt')
         output_to_dir(coref_truth, outdir, 'CoRef_truth.txt')
 
+# Outputs the whole ground truth and splits from the C3 data.
+def process_manager_edges():
+    # Need to process email nodes so we can later calculate the 'blocked' edges from the c3 datasets.
+    email_nodes = load_table(FILE_GROUND_TRUTH_EMAIL_NODES)
+    # Remove the (unnecessary) second to last column (it came from an ambiguous parse splits).
+    email_nodes.drop('other,manager,specialist,director,executive', axis=1, inplace=True)
+    resolve_column_type(email_nodes)
+
+    manager_edges = load_table(FILE_GROUND_TRUTH_MANAGES_EDGES)
+    # FIXME: can probably omit this line.
+    manager_edges.drop('NOTEXIST,EXIST', axis=1, inplace=True)
+    resolve_column_type(manager_edges)
+
+    # Grab necessary columns, in preparation for dumping the whole ground truth data.
+    manager_edges_data = manager_edges[['email','other_email', 'exists']].copy()
+    
+    # Convert existence column to boolean, so PSL can ground faster.
+    exists_map = {"NOTEXIST": 0.0, "EXIST": 1.0}
+    manager_edges_data = manager_edges_data.replace({'exists': exists_map})
+    
+    # Since it's undirected, add in the reverse edges.
+    manager_edges_data_sym = manager_edges_data[['other_email', 'email', 'exists']].copy()
+    manager_edges_data_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
+    
+    manager_edges_data = pd.concat([manager_edges_data, manager_edges_data_sym])
+    
+    # Calculated the missing edges that were blocked.
+    missing_edges = {pair for pair in itertools.permutations(email_nodes['id'], 2)} - {pair for pair in zip(manager_edges_data['email'], manager_edges_data['other_email'])}
+    
+    # Add in the missing edges.
+    row_list = []
+    for email, other_email in missing_edges:
+        row_dict = {'email':email, 'other_email':other_email, 'exists':0 }
+        row_list.append(row_dict)
+    
+    full_set_manager_edges_data = pd.concat([manager_edges_data, pd.DataFrame(row_list)], ignore_index=True)
+    print("outputting full set for link prediction: ./Manages_data.txt")
+    full_set_manager_edges_data.to_csv('Manages_data.txt', sep ='\t', index=False, header=False, columns=['email', 'other_email', 'exists'])
+
+    # Get targets, calculate splits for PSL predicates.
+    for i in range(1, 7):
+        # Targets
+        SPLIT_NUM = i
+        FILE_SAMPLE_MANAGES_EDGES = f'../c3/namata-kdd11-data/enron/enron-samples-lowunk/enron-sample-lowunk-{SPLIT_NUM}of6/sample-enron.UNDIRECTED.email-submgr.tab'
+        # Grab the sample from the original experiment, this will allow us to calculate observations and targets.
+        sample_manager_edges = load_table(FILE_SAMPLE_MANAGES_EDGES)
+        resolve_column_type(sample_manager_edges)
+
+        # Split data into observed and targets (AKA train and test)
+        manager_edges_obs = manager_edges[manager_edges['id'].isin(sample_manager_edges[sample_manager_edges['exists'].notna()]['id'])]
+        manager_edges_truth = manager_edges[manager_edges['id'].isin(sample_manager_edges[sample_manager_edges['exists'].isna()]['id'])]
+
+        # Grab the necessary columns
+        manages_obs = manager_edges_obs[['email', 'other_email', 'exists']].copy()
+        manages_truth = manager_edges_truth[['email', 'other_email', 'exists']].copy()
+        
+        # convert existence column to boolean, so PSL can ground faster
+        manages_obs = manages_obs.replace({'exists': exists_map})
+        manages_truth = manages_truth.replace({'exists': exists_map})
+        
+        # Since it's undirected, add in the reverse edges.
+        manages_obs_sym = manages_obs[['other_email', 'email', 'exists']].copy()
+        manages_truth_sym = manages_truth[['other_email', 'email', 'exists']].copy()
+        
+        manages_obs_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
+        manages_truth_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
+        
+        manages_obs = pd.concat([manages_obs, manages_obs_sym])
+        manages_truth = pd.concat([manages_truth, manages_truth_sym])
+        
+        # Calculated the missing edges that were blocked. Note the last set prevents cross contamination
+        missing_edges = {pair for pair in itertools.permutations(email_nodes['id'], 2)} - {pair for pair in zip(manages_obs['email'], manages_obs['other_email'])} - {pair for pair in zip(manages_truth['email'], manages_truth['other_email'])}
+        
+        # add in the missing edges
+        row_list = []
+        for email, other_email in missing_edges:
+            row_dict = {'email':email, 'other_email':other_email, 'exists':0 }
+            row_list.append(row_dict)
+        
+        full_set_manages_obs = pd.concat([manages_obs, pd.DataFrame(row_list)], ignore_index=True)
+
+        # Outputs splits to file.
+        # PSL splits start at 00, not 1.
+        outdir = './enron/' + str(i-1).zfill(2) + '/eval'
+        output_to_dir(full_set_manages_obs, outdir, 'Manages_obs.txt')
+        output_to_dir(manages_truth, outdir, 'Manages_truth.txt')
+        
+
 def main():
     process_email_nodes()
     process_CoRef_edges()
+    process_manager_edges()
 
 if __name__=="__main__":
     main()
