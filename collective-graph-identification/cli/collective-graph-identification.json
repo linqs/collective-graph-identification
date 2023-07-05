@@ -1,0 +1,235 @@
+{
+  "options": {
+    "runtime.db.intids": true,
+    "runtime.log.level": "DEBUG",
+    "runtime.learn": true,
+    "runtime.learn.method": "ContinuousRandomGridSearch",
+    "runtime.learn.output.model.path": "collective-graph-identification-learned-eval-patch.psl",
+    "search.dirichletalpha": 1.0,
+    "continuousrandomgridsearch.maxlocations": 250,
+  },
+  "rules": [
+    # Local
+    # ======================
+
+    # Entity Resolution
+    "1.0: LocalCoRef(E, L) = CoRef(E, L) ^2",
+    "1.0: SimEmailAddress(E1, E2) -> CoRef(E1, E2) ^2",
+    "1.0: SimCosineBow(E1, E2) -> CoRef(E1, E2) ^2",
+    "1.0: SimJaccardBow(E1, E2) -> CoRef(E1, E2) ^2",
+    "0.1: !CoRef(E1, E2) ^2",
+
+    # Node Labeling
+    "1.0: LocalEmailHasLabel(E, L) = EmailHasLabel(E, L) ^2",
+    "EmailHasLabel(E, +L) = 1.0 .",
+    "0.01: !EmailHasLabel(E, L) ^2",
+
+    # Link Prediction
+    "1.0: LocalManages(E, L) = Manages(E, L) ^2",
+    "1.0: SimCosineBow(E1, E2) -> !Manages(E1, E2) ^2",
+    "1.0: SimJaccardBow(E1, E2) -> !Manages(E1, E2) ^2",
+    "0.1: !Manages(E1, E2) ^2",
+
+    # Intra
+    # ======================
+
+    # Entity Resolution
+    "1.0: SimJaccardNetwork(E1, E2) -> CoRef(E1, E2) ^2",
+    "1.0: CoRef(E1, E2) & !CoRef(E2, E3) & (E1 != E2) & (E2 != E3) & (E1 != E3) -> !CoRef(E1, E3) ^2",
+    "1.0: CoRef(E1, E2) & CoRef(E2, E3) & (E1 != E2) & (E2 != E3) & (E1 != E3) -> CoRef(E1, E3) ^2",
+
+    # Node Labeling,
+    "1.0: SimEmailAddress(E1, E2) & EmailHasLabel(E1, L) -> EmailHasLabel(E2, L) ^2",
+    "1.0: !SimJaccardBow(E1, E2) & EmailHasLabel(E1, L) & (E1 != E2) -> !EmailHasLabel(E2, L) ^2",
+    "1.0: Communicates(E1, E2) & EmailHasLabel(E1, L) -> EmailHasLabel(E2, L) ^2",
+
+    # Link Prediction
+    "1.0: Manages(E1, E2) & Manages(E1, E3) & (E1 != E2) & (E2 != E3) & (E1 != E3) -> !Manages(E2, E3) ^2",
+
+    # Inter
+    # ======================
+
+    "1.0: CoRef(E1, E2) & EmailHasLabel(E1, L) -> EmailHasLabel(E2, L) ^2",
+    "1.0: EmailHasLabel(E1, L) & EmailHasLabel(E2, L) & SimEmailAddress(E1, E2) & (E1 != E2) -> CoRef(E1, E2) ^2",
+    "1.0: CoRef(E1, E2) & (E1 != E2) -> !Manages(E1, E2) ^2",
+    "1.0: Manages(E1, E2) & EmailHasLabel(E1, L) & (E1 != E2) -> !EmailHasLabel(E2, L) ^2",
+  ],
+  "predicates": {
+    "SimEmailAddress/2": {
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Sim_Email_thresh_3.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Sim_Email_thresh_3.txt"
+        ]
+      }
+    },
+    "SimCosineBow/2": {
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Sim_Cosine_BOW.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Sim_Cosine_BOW.txt"
+        ]
+      }
+    },
+    "SimJaccardBow/2": {
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Sim_Jaccard_BOW.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Sim_Jaccard_BOW.txt"
+        ]
+      }
+    },
+    "EmailHasLabel/2": {
+      "evaluations": [
+        {
+          "evaluator": "CategoricalEvaluator",
+          "options": {
+            "categoricalevaluator.categoryindexes": 1
+          }
+        }
+      ],
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/EmailHasLabel_obs.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/EmailHasLabel_obs.txt"
+        ]
+      },
+      "targets": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/EmailHasLabel_targets.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/EmailHasLabel_targets.txt"
+        ]
+      },
+      "truth": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/EmailHasLabel_truth.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/EmailHasLabel_truth.txt"
+        ]
+      }
+    },
+    "LocalEmailHasLabel/2": {
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Local_EmailHasLabel_obs.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Local_EmailHasLabel_obs.txt"
+        ]
+      }
+    },
+    "CoRef/2": {
+      "evaluations": [
+        {
+          "evaluator": "DiscreteEvaluator"
+        }
+      ],
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/CoRef_obs.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/CoRef_obs.txt"
+        ]
+      },
+      "targets": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/CoRef_targets.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/CoRef_targets.txt"
+        ]
+      },
+      "truth": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/CoRef_truth.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/CoRef_truth.txt"
+        ]
+      }
+    },
+    "SimJaccardNetwork/2": {
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Sim_Jaccard_Network.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Sim_Jaccard_Network.txt"
+        ]
+      }
+    },
+    "LocalCoRef/2": {
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Local_CoRef_obs.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Local_CoRef_obs.txt"
+        ]
+      }
+    },
+    "Communicates/2": {
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Communicates.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Communicates.txt"
+        ]
+      }
+    },
+    "Manages/2": {
+      "evaluations": [
+        {
+          "evaluator": "DiscreteEvaluator"
+        }
+      ],
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Manages_obs.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Manages_obs.txt"
+        ]
+      },
+      "targets": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Manages_targets.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Manages_targets.txt"
+        ]
+      },
+      "truth": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Manages_truth.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Manages_truth.txt"
+        ]
+      }
+    },
+    "LocalManages/2": {
+      "observations": {
+        "infer": [
+          "../data/collective-graph-identification/enron/00/eval/Local_Manages_obs.txt"
+        ],
+        "learn": [
+          "../data/collective-graph-identification/enron/00/eval/Local_Manages_obs.txt"
+        ]
+      }
+    }
+  }
+}
