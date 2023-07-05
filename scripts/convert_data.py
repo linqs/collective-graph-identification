@@ -12,6 +12,7 @@ from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 from strsimpy.qgram import QGram
 from scipy.spatial import distance
+from matplotlib import pyplot as plt
 
 # Full Graph
 FILE_GROUND_TRUTH_EMAIL_NODES         = '../c3/namata-kdd11-data/enron/enron-samples-lowunk/outputgraph/enron.NODE.email.tab'
@@ -277,7 +278,7 @@ def process_CoRef_edges():
     coref_edges = load_table(FILE_GROUND_TRUTH_COREF_EDGES)
     resolve_column_type(coref_edges)
 
-	# Grab necessary columns, in preparation for dumping the whole ground truth data
+    # Grab necessary columns, in preparation for dumping the whole ground truth data
     coref_edges_data = coref_edges[['email','other_email', 'exists']].copy()
     
     # convert existence column to boolean, so PSL can ground faster
@@ -470,12 +471,195 @@ def process_manager_edges():
 
         local_Manages_obs = train_local_manager_edges(manager_edges_obs, manager_edges_truth)
         output_to_dir(local_Manages_obs, outdir, 'Local_Manages_obs.txt')
+
+def calculate_email_address_similarities():
+    email_nodes = load_table(FILE_GROUND_TRUTH_EMAIL_NODES)
+    # Remove the (unnecessary) second to last column (it came from an ambiguous parse splits).
+    email_nodes.drop('other,manager,specialist,director,executive', axis=1, inplace=True)
+    resolve_column_type(email_nodes)
+
+    email_pairs = {pair for pair in itertools.combinations(email_nodes['id'], 2)}
+    
+    qgram = QGram(1)
+    
+    sim_email = pd.DataFrame()
+    row_list = []
+    
+    # TODO: Optimize this with the emailID_to_rowID map.
+    for pair in email_pairs:
+        email_1 = email_nodes[email_nodes['id'] == pair[0]]['emailaddress'].iloc[0]
+        email_2 = email_nodes[email_nodes['id'] == pair[1]]['emailaddress'].iloc[0]    
+    
+        string_similarity = qgram.distance(email_1, email_2)
+    
+        row_dict = {'email':pair[0], 'other_email':pair[1], 'qgram_sim':string_similarity}
+        row_list.append(row_dict)
         
+    sim_email = pd.concat([sim_email, pd.DataFrame(row_list)])
+
+    # Since it's undirected, add in the reverse edges.
+    sim_email_sym = sim_email[['other_email', 'email', 'qgram_sim']].copy()
+    
+    sim_email_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
+    
+    total_sim_email = pd.concat([sim_email, sim_email_sym], ignore_index=True)
+
+    is_similar = []
+    for sim in total_sim_email['qgram_sim']:
+        is_similar.append(float(sim < 3))
+    
+    total_sim_email["is_similar"] = is_similar
+    total_sim_email = total_sim_email.drop(['qgram_sim'], axis = 1)
+
+    for i in range(0, 6):
+        outdir = './enron/' + str(i).zfill(2) + '/eval'
+        output_to_dir(total_sim_email, outdir, 'Sim_Email_thresh_3.txt')
+
+def calculate_bag_of_words_similarities():
+    email_nodes = load_table(FILE_GROUND_TRUTH_EMAIL_NODES)
+    # Remove the (unnecessary) second to last column (it came from an ambiguous parse splits).
+    email_nodes.drop('other,manager,specialist,director,executive', axis=1, inplace=True)
+    resolve_column_type(email_nodes)
+
+    email_pairs = {pair for pair in itertools.combinations(email_nodes['id'], 2)}
+
+    sim_bow = pd.DataFrame()
+    row_list = []
+    
+    
+    emailID_to_rowID = {key: value for key, value in zip(list(email_nodes['id']), list(email_nodes.index))}
+    for pair in email_pairs:
+        entity_1 = email_nodes.iloc[emailID_to_rowID[pair[0]]]
+        entity_2 = email_nodes.iloc[emailID_to_rowID[pair[1]]]
+    
+        bow_1 = entity_1[5:-1]
+        bow_2 = entity_2[5:-1]
+
+        row_dict = {'email':pair[0], 'other_email':pair[1], 'jaccard_sim_bow':distance.jaccard(list(bow_1), list(bow_2)), 'cosine_sim_bow':distance.cosine(np.nan_to_num(list(bow_1)), np.nan_to_num(list(bow_2)))}
+        row_list.append(row_dict)
+
+    sim_bow = pd.concat([sim_bow, pd.DataFrame(row_list)])
+    # Since it's undirected, add in the reverse edges.
+    sim_bow_sym = sim_bow[['other_email', 'email', 'jaccard_sim_bow', 'cosine_sim_bow']].copy()
+    sim_bow_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
+    
+    sim_bow = pd.concat([sim_bow, sim_bow_sym])
+    for i in range(0, 6):
+        outdir = './enron/' + str(i).zfill(2) + '/eval/' + 'Sim_Jaccard_BOW.txt'
+        print("Outputting split to: ", outdir)
+        sim_bow.to_csv(outdir, sep ='\t', index=False, header=False, columns=['email', 'other_email', 'jaccard_sim_bow'])
+
+        outdir = './enron/' + str(i).zfill(2) + '/eval/' + 'Sim_Cosine_BOW.txt'
+        print("Outputting split to: ", outdir)
+        sim_bow.to_csv(outdir, sep ='\t', index=False, header=False, columns=['email', 'other_email', 'cosine_sim_bow'])
+
+# Produces communication observations and network similarities.
+def calculate_network_similarities():
+    email_nodes = load_table(FILE_GROUND_TRUTH_EMAIL_NODES)
+    # Remove the (unnecessary) second to last column (it came from an ambiguous parse splits).
+    email_nodes.drop('other,manager,specialist,director,executive', axis=1, inplace=True)
+    resolve_column_type(email_nodes)
+
+    email_pairs = {pair for pair in itertools.combinations(email_nodes['id'], 2)}
+
+    communication_edges = load_table(FILE_GROUND_TRUTH_COMMUNICATION_EDGES)
+    resolve_column_type(communication_edges)
+    # Add in existence column.
+    communication_edges['exists'] = 1.0
+    
+    # Calculated the missing edges that were blocked.
+    missing_edges = {pair for pair in itertools.permutations(email_nodes['id'], 2)} - {pair for pair in zip(communication_edges['email'], communication_edges['other_email'])}
+    # Add in the missing edges.
+    row_list = []
+    for email, other_email in missing_edges:
+        row_dict = {'email':email, 'other_email':other_email, 'exists':0 }
+        row_list.append(row_dict)
+
+    full_set_communication_edges = pd.concat([communication_edges, pd.DataFrame(row_list)], ignore_index=True)
+
+    for i in range(0, 6):
+        outdir = './enron/' + str(i).zfill(2) + '/eval/' + 'Communicates.txt'
+        print("Outputting split to: ", outdir)
+        full_set_communication_edges.to_csv(outdir, sep ='\t', index=False, header=False, columns=['email', 'other_email', 'exists'])
+
+    # Start loading in the CoRef edges for network similarities.
+    coref_edges = load_table(FILE_GROUND_TRUTH_COREF_EDGES)
+    resolve_column_type(coref_edges)
+
+    # Grab necessary columns, in preparation for dumping the whole ground truth data
+    coref_edges_data = coref_edges[['email','other_email', 'exists']].copy()
+    
+    # convert existence column to boolean, so PSL can ground faster
+    coref_edges_data = coref_edges_data.replace({'exists': exists_map})
+    
+    # Since it's undirected, add in the reverse edges.
+    coref_edges_data_sym = coref_edges_data[['other_email', 'email', 'exists']].copy()
+    coref_edges_data_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
+    
+    coref_edges_data = pd.concat([coref_edges_data, coref_edges_data_sym])
+    
+    # Calculated the missing edges that were blocked.
+    missing_edges = {pair for pair in itertools.permutations(email_nodes['id'], 2)} - {pair for pair in zip(coref_edges_data['email'], coref_edges_data['other_email'])}
+    
+    # add in the missing edges
+    row_list = []
+    for email, other_email in missing_edges:
+        row_dict = {'email':email, 'other_email':other_email, 'exists':0 }
+        row_list.append(row_dict)
+
+    full_set_coref_edges_data = pd.concat([coref_edges_data, pd.DataFrame(row_list)], ignore_index=True)
+
+
+    # prepare ground truth
+    coref_map = {(int(full_set_coref_edges_data.iloc[index]['email']), int(full_set_coref_edges_data.iloc[index]['other_email'])):full_set_coref_edges_data.iloc[index]['exists'] for index in full_set_coref_edges_data.index}
+    sim_network = pd.DataFrame()
+    row_list = []
+    
+    
+    # TODO: Optimize this with the emailID_to_rowID map.
+    for id_1, id_2 in email_pairs:
+    
+        adjacent_nodes_1 = set(communication_edges[communication_edges['email'] == id_1]['other_email'])
+        adjacent_nodes_2 = set(communication_edges[communication_edges['email'] == id_2]['other_email'])
+    
+        entity_1 = email_nodes[email_nodes['id'] == id_1]
+        entity_2 = email_nodes[email_nodes['id'] == id_2]
+    
+        bow_1 = entity_1.iloc[0][5:-1]
+        bow_2 = entity_2.iloc[0][5:-1]
+    
+    
+        jaccard_sim =  len(adjacent_nodes_1 & adjacent_nodes_2) / len(adjacent_nodes_1 | adjacent_nodes_2 ) if len(adjacent_nodes_1 | adjacent_nodes_2) != 0 else 0
+        dice_sim =  (2 * len(adjacent_nodes_1 & adjacent_nodes_2) ) / (len(adjacent_nodes_1) + len(adjacent_nodes_2)) if len(adjacent_nodes_1) + len(adjacent_nodes_2) != 0 else 0
+    
+    
+        row_dict = {'email':id_1, 'other_email':id_2, 'jaccard_sim_network':jaccard_sim, 'dice_sim_network':dice_sim, 'jaccard_sim_bow':distance.jaccard(list(bow_1), list(bow_2)), 'cosine_sim_bow':distance.cosine(np.nan_to_num(list(bow_1)), np.nan_to_num(list(bow_2))), 'is_coref': coref_map[(id_1, id_2)]}
+        row_list.append(row_dict)
+    
+    sim_network = pd.concat([sim_network, pd.DataFrame(row_list)])
+
+    # Since it's undirected, add in the reverse edges.
+    sim_network_sym = sim_network[['other_email', 'email', 'jaccard_sim_network', 'dice_sim_network', 'jaccard_sim_bow', 'cosine_sim_bow', 'is_coref']].copy()
+    sim_network_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
+    
+    sim_network = pd.concat([sim_network, sim_network_sym], ignore_index=True)
+    for i in range(0, 6):
+        outdir = './enron/' + str(i).zfill(2) + '/eval/' + 'Sim_Jaccard_Network.txt'
+        print("Outputting split to: ", outdir)
+        sim_network.to_csv(outdir, sep ='\t', index=False, header=False, columns=['email', 'other_email', 'jaccard_sim_network'])
+
+
+def process_similarity_metrics():
+    calculate_email_address_similarities()
+    calculate_bag_of_words_similarities()
+    calculate_network_similarities()
+
 
 def main():
     process_email_nodes()
     process_CoRef_edges()
     process_manager_edges()
+    process_similarity_metrics()
 
 if __name__=="__main__":
     main()
