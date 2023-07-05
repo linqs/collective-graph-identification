@@ -10,6 +10,8 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
+from strsimpy.qgram import QGram
+from scipy.spatial import distance
 
 # Full Graph
 FILE_GROUND_TRUTH_EMAIL_NODES         = '../c3/namata-kdd11-data/enron/enron-samples-lowunk/outputgraph/enron.NODE.email.tab'
@@ -204,6 +206,65 @@ def process_email_nodes():
         local_EmailHasTitle_obs = train_local_node_labels(email_nodes_obs, email_nodes_truth)
         output_to_dir(local_EmailHasTitle_obs, outdir, 'Local_EmailHasLabel_obs.txt')
 
+def train_local_CoRef_edges(full_set_coref_edges_obs, coref_truth, email_nodes):
+    node_to_email = dict(zip(email_nodes['id'], email_nodes['emailaddress']))
+
+    qgram = QGram(1)
+    train_x = full_set_coref_edges_obs.copy()
+    train_y = full_set_coref_edges_obs['exists'].copy()
+    
+    train_x['address_similarity'] = 0.0
+    train_x['bow_cosine_similarity'] = 0.0
+    train_x['bow_jaccard_similarity'] = 0.0
+    
+    emailID_to_rowID = {key: value for key, value in zip(list(email_nodes['id']), list(email_nodes.index))}
+    for index, row in train_x.iterrows():
+        string_similarity = qgram.distance(email_nodes.iloc[emailID_to_rowID[row['email']]]['emailaddress'], email_nodes.iloc[emailID_to_rowID[row['other_email']]]['emailaddress'])
+        train_x.loc[index, 'address_similarity'] = string_similarity
+    
+        bow_cosine_similarity = distance.cosine(np.nan_to_num(list(email_nodes.iloc[emailID_to_rowID[row['email']]][5:-1])), np.nan_to_num(list(email_nodes.iloc[emailID_to_rowID[row['other_email']]][5:-1])))
+        train_x.loc[index, 'bow_cosine_similarity'] = bow_cosine_similarity
+    
+        bow_jaccard_similarity = distance.jaccard(np.nan_to_num(list(email_nodes.iloc[emailID_to_rowID[row['email']]][5:-1])), np.nan_to_num(list(email_nodes.iloc[emailID_to_rowID[row['other_email']]][5:-1])))
+        train_x.loc[index, 'bow_jaccard_similarity'] = bow_jaccard_similarity  
+
+    train_x = train_x.drop(['email', 'other_email', 'exists'], axis = 1)
+
+    test_x = coref_truth.copy()
+    test_y = coref_truth['exists'].copy()
+    
+    test_x['address_similarity'] = 0.0
+    test_x['bow_cosine_similarity'] = 0.0
+    test_x['bow_jaccard_similarity'] = 0.0
+    
+    for index, row in test_x.iterrows():
+        string_similarity = qgram.distance(email_nodes.iloc[emailID_to_rowID[row['email']]]['emailaddress'], email_nodes.iloc[emailID_to_rowID[row['other_email']]]['emailaddress'])
+        test_x.loc[index, 'address_similarity'] = string_similarity
+    
+        bow_cosine_similarity = distance.cosine(np.nan_to_num(list(email_nodes.iloc[emailID_to_rowID[row['email']]][5:-1])), np.nan_to_num(list(email_nodes.iloc[emailID_to_rowID[row['other_email']]][5:-1])))
+        test_x.loc[index, 'bow_cosine_similarity'] = bow_cosine_similarity
+    
+        bow_jaccard_similarity = distance.jaccard(np.nan_to_num(list(email_nodes.iloc[emailID_to_rowID[row['email']]][5:-1])), np.nan_to_num(list(email_nodes.iloc[emailID_to_rowID[row['other_email']]][5:-1])))
+        test_x.loc[index, 'bow_jaccard_similarity'] = bow_jaccard_similarity  
+            
+    test_x = test_x.drop(['email', 'other_email', 'exists'], axis = 1)
+
+    classifier = LogisticRegression()
+    classifier.fit(train_x, train_y)
+
+    local_CoRef_probabilities = classifier.predict_proba(test_x)
+    local_CoRef_obs = pd.DataFrame()
+    row_list = []
+    # build a table
+    for index, probabilities in enumerate(local_CoRef_probabilities):
+        row_dict = {'email': int(coref_truth.iloc[index]['email']), 'other_email': int(coref_truth.iloc[index]['other_email']), 'exists': probabilities[1]}
+        row_list.append(row_dict)
+        #print(email_nodes_truth.iloc[index]['id'], "\t", title_map[classifier.classes_[class_index]], "\t", probability)
+    
+    local_CoRef_obs = pd.concat([local_CoRef_obs, pd.DataFrame(row_list)], ignore_index=True)
+    return local_CoRef_obs
+
+
 # Outputs the whole ground truth and splits from the C3 data.
 def process_CoRef_edges():
     # Need to process email nodes so we can later calculate the 'blocked' edges from the c3 datasets.
@@ -289,6 +350,9 @@ def process_CoRef_edges():
         outdir = './enron/' + str(i-1).zfill(2) + '/eval'
         output_to_dir(full_set_coref_edges_obs, outdir, 'CoRef_obs.txt')
         output_to_dir(coref_truth, outdir, 'CoRef_truth.txt')
+
+        local_CoRef_obs = train_local_CoRef_edges(full_set_coref_edges_obs, coref_truth, email_nodes)
+        output_to_dir(local_CoRef_obs, outdir, 'Local_CoRef_obs.txt')
 
 def train_local_manager_edges(manager_edges_obs, manager_edges_truth):
     train_x = manager_edges_obs.drop(['id', 'numexchanged', 'email', 'other_email', 'exists'], axis = 1).fillna(0)
@@ -409,8 +473,8 @@ def process_manager_edges():
         
 
 def main():
-    # process_email_nodes()
-    # process_CoRef_edges()
+    process_email_nodes()
+    process_CoRef_edges()
     process_manager_edges()
 
 if __name__=="__main__":
