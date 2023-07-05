@@ -7,12 +7,18 @@ import itertools # for cross products when filling in a full PSL dataset
 
 import pandas as pd
 import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
 
 # Full Graph
 FILE_GROUND_TRUTH_EMAIL_NODES         = '../c3/namata-kdd11-data/enron/enron-samples-lowunk/outputgraph/enron.NODE.email.tab'
 FILE_GROUND_TRUTH_COREF_EDGES         = '../c3/namata-kdd11-data/enron/enron-samples-lowunk/outputgraph/enron.UNDIRECTED.coref.tab'
 FILE_GROUND_TRUTH_MANAGES_EDGES       = '../c3/namata-kdd11-data/enron/enron-samples-lowunk/outputgraph/enron.UNDIRECTED.email-submgr.tab'
 FILE_GROUND_TRUTH_COMMUNICATION_EDGES = '../c3/namata-kdd11-data/enron/enron-samples-lowunk/outputgraph/enron.DIRECTED.sentto.tab'
+
+# Convert titles to integers, so PSL can ground faster.
+title_map = {"other": 0, "manager": 1, "specialist": 2, "director": 3, "executive": 4}
 
 # Assigns types to each column.
 def resolve_column_type(table):
@@ -113,6 +119,29 @@ def output_to_dir(df, outdir, outname):
     print("outputing split to: ", fullname) 
     df.to_csv(fullname, sep = '\t', index = False, header = False)
 
+def train_local_node_labels(email_nodes_obs, email_nodes_truth):
+    train_x = email_nodes_obs.drop(['id', 'emailaddress', 'title', 'numsent', 'numreceived', 'numexchanged'], axis = 1).fillna(0)
+    train_y = email_nodes_obs['title']
+
+    test_x = email_nodes_truth.drop(['id', 'emailaddress', 'title', 'numsent', 'numreceived', 'numexchanged'], axis = 1).fillna(0)
+    test_y = email_nodes_truth['title']
+    classifier = LogisticRegression(max_iter=300)
+    classifier.fit(train_x, train_y)
+    # predictions = classifier.predict(test_x)
+
+    # Use probabilities for PSL observed data.
+    local_EmailHasTitle_probabilities = classifier.predict_proba(test_x)
+    local_EmailHasTitle_obs = pd.DataFrame()
+    row_list = []
+    # build a table
+    for index, probabilities in enumerate(local_EmailHasTitle_probabilities):
+        for class_index, probability in enumerate(probabilities):
+            row_dict = {'id': email_nodes_truth.iloc[index]['id'], 'title': title_map[classifier.classes_[class_index]], 'exists': probability}
+            row_list.append(row_dict)
+    
+    local_EmailHasTitle_obs = pd.concat([local_EmailHasTitle_obs, pd.DataFrame(row_list)], ignore_index=True)
+    return local_EmailHasTitle_obs
+
 # Outputs the whole ground truth and splits from the C3 data.
 def process_email_nodes():
     # Get ground truth.
@@ -124,14 +153,12 @@ def process_email_nodes():
     # Grab necessary columns, in preparation for dumping the whole ground truth data.
     email_nodes_data = email_nodes[['id','title']].copy()
 
-    # Convert titles to integers, so PSL can ground faster.
-    title_map = {"other": 0, "manager": 1, "specialist": 2, "director": 3, "executive": 4}
 
     email_nodes_data = email_nodes_data.replace({'title': title_map})
     email_nodes_data['exists'] = 1.0
 
     full_set_email_has_label_data = fill_observed_missing_possibilities(email_nodes_data, ['id', 'title', 'exists'], list(title_map.values()))
-    print("outputting full set for node labeling: ./EmailHasLabel_data.txt")
+    print("outputting full (unsplit) set for node labeling: ./EmailHasLabel_data.txt")
     full_set_email_has_label_data.to_csv('EmailHasLabel_data.txt', sep ='\t', index=False, header=False, columns=['id', 'title', 'exists'])
 
     # Get targets, calculate splits for PSL predicates.
@@ -172,6 +199,9 @@ def process_email_nodes():
         output_to_dir(full_set_email_has_label_obs, outdir, 'EmailHasLabel_obs.txt')
         output_to_dir(full_set_email_has_label_truth, outdir, 'EmailHasLabel_truth.txt')
 
+        local_EmailHasTitle_obs = train_local_node_labels(email_nodes_obs, email_nodes_truth)
+        output_to_dir(local_EmailHasTitle_obs, outdir, 'Local_EmailHasLabel_obs.txt')
+
 # Outputs the whole ground truth and splits from the C3 data.
 def process_CoRef_edges():
     # Need to process email nodes so we can later calculate the 'blocked' edges from the c3 datasets.
@@ -208,7 +238,7 @@ def process_CoRef_edges():
 
     full_set_coref_edges_data = pd.concat([coref_edges_data, pd.DataFrame(row_list)], ignore_index=True)
 
-    print("outputting full set for entity resolution: ./CoRef_data.txt")
+    print("outputting full (unsplit) set for entity resolution: ./CoRef_data.txt")
     full_set_coref_edges_data.to_csv('CoRef_data.txt', sep ='\t', index=False, header=False, columns=['email', 'other_email', 'exists'])
 
     # Get targets, calculate splits for PSL predicates.
@@ -295,7 +325,7 @@ def process_manager_edges():
         row_list.append(row_dict)
     
     full_set_manager_edges_data = pd.concat([manager_edges_data, pd.DataFrame(row_list)], ignore_index=True)
-    print("outputting full set for link prediction: ./Manages_data.txt")
+    print("outputting full (unsplit) set for link prediction: ./Manages_data.txt")
     full_set_manager_edges_data.to_csv('Manages_data.txt', sep ='\t', index=False, header=False, columns=['email', 'other_email', 'exists'])
 
     # Get targets, calculate splits for PSL predicates.
