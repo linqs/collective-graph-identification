@@ -19,6 +19,8 @@ FILE_GROUND_TRUTH_COMMUNICATION_EDGES = '../c3/namata-kdd11-data/enron/enron-sam
 
 # Convert titles to integers, so PSL can ground faster.
 title_map = {"other": 0, "manager": 1, "specialist": 2, "director": 3, "executive": 4}
+# convert existence column to boolean, so PSL can ground faster
+exists_map = {"NOTEXIST": 0.0, "EXIST": 1.0}
 
 # Assigns types to each column.
 def resolve_column_type(table):
@@ -218,7 +220,6 @@ def process_CoRef_edges():
     coref_edges_data = coref_edges[['email','other_email', 'exists']].copy()
     
     # convert existence column to boolean, so PSL can ground faster
-    exists_map = {"NOTEXIST": 0.0, "EXIST": 1.0}
     coref_edges_data = coref_edges_data.replace({'exists': exists_map})
     
     # Since it's undirected, add in the reverse edges.
@@ -289,6 +290,34 @@ def process_CoRef_edges():
         output_to_dir(full_set_coref_edges_obs, outdir, 'CoRef_obs.txt')
         output_to_dir(coref_truth, outdir, 'CoRef_truth.txt')
 
+def train_local_manager_edges(manager_edges_obs, manager_edges_truth):
+    train_x = manager_edges_obs.drop(['id', 'numexchanged', 'email', 'other_email', 'exists'], axis = 1).fillna(0)
+    train_y = manager_edges_obs['exists']
+    
+    test_x = manager_edges_truth.drop(['id', 'numexchanged', 'email', 'other_email', 'exists'], axis = 1).fillna(0)
+    test_y = manager_edges_truth['exists']
+
+    classifier = LogisticRegression(max_iter=300)
+    classifier.fit(train_x, train_y)
+    local_Manages_probabilities = classifier.predict_proba(test_x)
+    local_Manages_obs = pd.DataFrame()
+    row_list = []
+    # build a table
+    for index, probabilities in enumerate(local_Manages_probabilities):
+        row_dict = {'email': manager_edges_truth.iloc[index]['email'], 'other_email': manager_edges_truth.iloc[index]['other_email'], 'exists': exists_map[classifier.classes_[np.argmax(probabilities)]]}
+        row_list.append(row_dict)
+        #print(email_nodes_truth.iloc[index]['id'], "\t", title_map[classifier.classes_[class_index]], "\t", probability)
+    
+    local_Manages_obs = pd.concat([local_Manages_obs, pd.DataFrame(row_list)])
+    # Since it's undirected, add in the reverse edges.
+    local_Manages_obs_sym = local_Manages_obs[['other_email', 'email', 'exists']].copy()
+    
+    local_Manages_obs_sym.rename(columns = {'other_email':'email', 'email':'other_email'}, inplace = True)
+    
+    local_Manages_obs = pd.concat([local_Manages_obs, local_Manages_obs_sym])
+    return local_Manages_obs
+
+
 # Outputs the whole ground truth and splits from the C3 data.
 def process_manager_edges():
     # Need to process email nodes so we can later calculate the 'blocked' edges from the c3 datasets.
@@ -306,7 +335,6 @@ def process_manager_edges():
     manager_edges_data = manager_edges[['email','other_email', 'exists']].copy()
     
     # Convert existence column to boolean, so PSL can ground faster.
-    exists_map = {"NOTEXIST": 0.0, "EXIST": 1.0}
     manager_edges_data = manager_edges_data.replace({'exists': exists_map})
     
     # Since it's undirected, add in the reverse edges.
@@ -375,11 +403,14 @@ def process_manager_edges():
         outdir = './enron/' + str(i-1).zfill(2) + '/eval'
         output_to_dir(full_set_manages_obs, outdir, 'Manages_obs.txt')
         output_to_dir(manages_truth, outdir, 'Manages_truth.txt')
+
+        local_Manages_obs = train_local_manager_edges(manager_edges_obs, manager_edges_truth)
+        output_to_dir(local_Manages_obs, outdir, 'Local_Manages_obs.txt')
         
 
 def main():
-    process_email_nodes()
-    process_CoRef_edges()
+    # process_email_nodes()
+    # process_CoRef_edges()
     process_manager_edges()
 
 if __name__=="__main__":
